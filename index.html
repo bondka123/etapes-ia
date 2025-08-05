@@ -2,329 +2,36 @@
 <html lang="fr">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <meta name="viewport" content="width=device-width, initial-scale=1" />
   <title>Liste de Tâches avec Agenda</title>
-  <style>
-    :root {
-      --bg: #ffffff;
-      --text: #333;
-      --card: #fff8a5;
-      --card-text: #000;
-    }
+    <link rel="stylesheet" href="style.css">
 
-    body.dark {
-      --bg: #121212;
-      --text: #f0f0f0;
-      --card: #333;
-      --card-text: #f0f0f0;
-    }
-
-    body {
-      font-family: Arial, sans-serif;
-      max-width: 800px;
-      margin: 0 auto;
-      padding: 20px;
-      background-color: var(--bg);
-      color: var(--text);
-      transition: background-color 0.3s, color 0.3s;
-      position: relative;
-      padding-top: 100px;
-    }
-
-    h1 {
-      text-align: center;
-      margin-bottom: 20px;
-    }
-
-    /* Mode sombre bouton en haut à gauche */
-    .dark-mode-container {
-      position: absolute;
-      top: 20px;
-      left: 20px;
-    }
-
-    .dark-toggle {
-      background-color: #333;
-      color: white;
-      padding: 8px 14px;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .dark-toggle:hover {
-      background-color: #555;
-    }
-
-    /* Menu de navigation centré */
-    .nav-bar {
-      display: flex;
-      justify-content: center;
-      gap: 15px;
-      margin-top: 20px;
-      margin-bottom: 30px;
-    }
-
-    .nav-bar button {
-      padding: 8px 16px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .nav-bar button:hover {
-      background-color: #45a049;
-    }
-
-    .task-input {
-      display: flex;
-      flex-wrap: wrap;
-      gap: 10px;
-      margin-bottom: 20px;
-    }
-
-    #taskInput, #taskDate {
-      flex: 1;
-      padding: 8px;
-      font-size: 16px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
-    }
-
-    .task-input button {
-      padding: 8px 16px;
-      background-color: #4CAF50;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-
-    .task-input button:hover {
-      background-color: #45a049;
-    }
-
-    .task-list {
-      list-style: none;
-      padding: 0;
-    }
-
-    .task-item {
-      display: flex;
-      align-items: center;
-      padding: 15px;
-      margin: 10px 0;
-      background-color: var(--card);
-      color: var(--card-text);
-      border-radius: 8px;
-      box-shadow: 2px 4px 8px rgba(0, 0, 0, 0.2);
-      transform: rotate(-1deg);
-    }
-
-    .task-item:nth-child(even) {
-      transform: rotate(1.5deg);
-    }
-
-    .task-item.completed {
-      opacity: 0.6;
-      text-decoration: line-through;
-    }
-
-    .task-item input[type="checkbox"] {
-      margin-right: 10px;
-    }
-
-    .task-item span {
-      flex: 1;
-      word-break: break-word;
-    }
-
-    .delete-btn {
-      background-color: #f44336;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      padding: 6px 10px;
-      cursor: pointer;
-    }
-
-    .delete-btn:hover {
-      background-color: #da190b;
-    }
-
-    .date-section {
-      margin-top: 20px;
-    }
-
-    .date-header {
-      font-size: 18px;
-      font-weight: bold;
-      margin: 10px 0;
-      color: var(--text);
-    }
-
-    @media (max-width: 600px) {
-      .task-input {
-        flex-direction: column;
-      }
-
-      .nav-bar {
-        flex-direction: column;
-        align-items: center;
-      }
-    }
-  </style>
 </head>
 <body>
-
-  <!-- Bouton mode sombre -->
-  <div class="dark-mode-container">
-    <button class="dark-toggle" onclick="toggleDarkMode()">🌓 Mode Sombre</button>
-  </div>
-
-  <!-- Navigation -->
-  <div class="nav-bar">
-    <button onclick="setFilter('all')">Toutes</button>
-    <button onclick="setFilter('active')">Actives</button>
-    <button onclick="setFilter('completed')">Terminées</button>
-  </div>
+  <button id="darkModeToggle">Mode sombre</button>
 
   <h1>Liste de Tâches avec Agenda</h1>
 
+  <div class="top-bar">
+    <button class="filter-btn active" onclick="setFilter('all')" id="filter-all">Toutes</button>
+    <button class="filter-btn" onclick="setFilter('active')" id="filter-active">Actives</button>
+    <button class="filter-btn" onclick="setFilter('completed')" id="filter-completed">Terminées</button>
+  </div>
+
   <div class="task-input">
-    <input type="text" id="taskInput" placeholder="Ajouter une nouvelle tâche">
-    <input type="date" id="taskDate">
+    <input type="text" id="taskInput" placeholder="Ajouter une nouvelle tâche" />
+    <input type="date" id="taskDate" />
     <button onclick="addTask()">Ajouter</button>
+  </div>
+
+  <div class="delete-all-container">
+    <button class="delete-all-btn" onclick="deleteAllTasks()">🗑️ Supprimer toutes les tâches</button>
   </div>
 
   <div id="taskContainer"></div>
 
-  <script>
-    let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
-    let filter = 'all';
-    let selectedIndex = null;
-
-    function formatDate(dateStr) {
-      const [year, month, day] = dateStr.split('-');
-      return `${day}/${month}/${year}`;
-    }
-
-    function getTodayDate() {
-      const today = new Date();
-      return today.toISOString().split('T')[0];
-    }
-
-    function renderTasks() {
-      const taskContainer = document.getElementById('taskContainer');
-      taskContainer.innerHTML = '';
-      tasks.sort((a, b) => a.date.localeCompare(b.date));
-      const tasksByDate = {};
-
-      tasks.forEach((task, index) => {
-        if (filter === 'active' && task.completed) return;
-        if (filter === 'completed' && !task.completed) return;
-
-        if (!tasksByDate[task.date]) {
-          tasksByDate[task.date] = [];
-        }
-        tasksByDate[task.date].push({ ...task, index });
-      });
-
-      for (const date in tasksByDate) {
-        const dateDiv = document.createElement('div');
-        dateDiv.className = 'date-section';
-        dateDiv.innerHTML = `<div class="date-header">${formatDate(date)}</div>`;
-        const taskList = document.createElement('ul');
-        taskList.className = 'task-list';
-
-        tasksByDate[date].forEach(task => {
-          const li = document.createElement('li');
-          li.className = `task-item ${task.completed ? 'completed' : ''}`;
-          li.setAttribute('data-index', task.index);
-          li.innerHTML = `
-            <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.index})">
-            <span>${task.text}</span>
-            <button class="delete-btn" onclick="deleteTask(${task.index})">Supprimer</button>
-          `;
-          taskList.appendChild(li);
-        });
-
-        dateDiv.appendChild(taskList);
-        taskContainer.appendChild(dateDiv);
-      }
-    }
-
-    function addTask() {
-      const taskInput = document.getElementById('taskInput');
-      const taskDate = document.getElementById('taskDate');
-      const taskText = taskInput.value.trim();
-      const taskDateValue = taskDate.value || getTodayDate();
-
-      if (taskText) {
-        tasks.push({ text: taskText, date: taskDateValue, completed: false });
-        taskInput.value = '';
-        taskDate.value = '';
-        saveTasks();
-        renderTasks();
-      }
-    }
-
-    function toggleTask(index) {
-      tasks[index].completed = !tasks[index].completed;
-      saveTasks();
-      renderTasks();
-    }
-
-    function deleteTask(index) {
-      tasks.splice(index, 1);
-      saveTasks();
-      renderTasks();
-    }
-
-    function saveTasks() {
-      localStorage.setItem('tasks', JSON.stringify(tasks));
-    }
-
-    function setFilter(f) {
-      filter = f;
-      renderTasks();
-    }
-
-    function toggleDarkMode() {
-      document.body.classList.toggle('dark');
-    }
-
-    document.getElementById('taskInput').addEventListener('keypress', function(e) {
-      if (e.key === 'Enter') {
-        addTask();
-      }
-    });
-
-    // Supprimer avec touche Delete
-    document.addEventListener('keydown', function(e) {
-      if (e.key === 'Delete' && selectedIndex !== null) {
-        deleteTask(selectedIndex);
-        selectedIndex = null;
-      }
-    });
-
-    // Sélectionner une tâche
-    document.addEventListener('click', function(e) {
-      const li = e.target.closest('.task-item');
-      if (li) {
-        const items = document.querySelectorAll('.task-item');
-        items.forEach(item => item.style.border = '');
-        li.style.border = '2px dashed red';
-        selectedIndex = parseInt(li.getAttribute('data-index'));
-      } else {
-        selectedIndex = null;
-        document.querySelectorAll('.task-item').forEach(item => item.style.border = '');
-      }
-    });
-
-    renderTasks();
+  <script src="script.js">
+    
   </script>
 </body>
 </html>
