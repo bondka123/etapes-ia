@@ -1,0 +1,192 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Liste de Tâches avec Agenda</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 600px;
+            margin: 20px auto;
+            padding: 20px;
+        }
+        h1, h2 {
+            text-align: center;
+            color: #333;
+        }
+        .task-input {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 20px;
+        }
+        #taskInput, #taskDate {
+            flex: 1;
+            padding: 8px;
+            font-size: 16px;
+            border: 1px solid #ccc;
+            border-radius: 4px;
+        }
+        button {
+            padding: 8px 16px;
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .task-list {
+            list-style: none;
+            padding: 0;
+        }
+        .task-item {
+            display: flex;
+            align-items: center;
+            padding: 10px;
+            margin: 5px 0;
+            background-color: #f9f9f9;
+            border-radius: 4px;
+        }
+        .task-item.completed {
+            background-color: #e0e0e0;
+            text-decoration: line-through;
+        }
+        .task-item input[type="checkbox"] {
+            margin-right: 10px;
+        }
+        .task-item span {
+            flex: 1;
+        }
+        .delete-btn {
+            background-color: #f44336;
+        }
+        .delete-btn:hover {
+            background-color: #da190b;
+        }
+        .date-section {
+            margin-top: 20px;
+        }
+        .date-header {
+            font-size: 18px;
+            font-weight: bold;
+            margin: 10px 0;
+            color: #555;
+        }
+    </style>
+</head>
+<body>
+    <h1>Liste de Tâches avec Agenda</h1>
+    <div class="task-input">
+        <input type="text" id="taskInput" placeholder="Ajouter une nouvelle tâche">
+        <input type="date" id="taskDate">
+        <button onclick="addTask()">Ajouter</button>
+    </div>
+    <div id="taskContainer"></div>
+
+    <script>
+        // Charger les tâches depuis le localStorage
+        let tasks = JSON.parse(localStorage.getItem('tasks')) || [];
+
+        // Formater la date pour l'affichage (ex. : 2025-08-05 -> 05/08/2025)
+        function formatDate(dateStr) {
+            const [year, month, day] = dateStr.split('-');
+            return `${day}/${month}/${year}`;
+        }
+
+        // Obtenir la date d'aujourd'hui au format YYYY-MM-DD
+        function getTodayDate() {
+            const today = new Date();
+            return today.toISOString().split('T')[0];
+        }
+
+        // Afficher les tâches triées par date
+        function renderTasks() {
+            const taskContainer = document.getElementById('taskContainer');
+            taskContainer.innerHTML = '';
+
+            // Trier les tâches par date
+            tasks.sort((a, b) => a.date.localeCompare(b.date));
+
+            // Regrouper les tâches par date
+            const tasksByDate = {};
+            tasks.forEach((task, index) => {
+                if (!tasksByDate[task.date]) {
+                    tasksByDate[task.date] = [];
+                }
+                tasksByDate[task.date].push({ ...task, index });
+            });
+
+            // Afficher les tâches pour chaque date
+            for (const date in tasksByDate) {
+                const dateDiv = document.createElement('div');
+                dateDiv.className = 'date-section';
+                dateDiv.innerHTML = `<div class="date-header">${formatDate(date)}</div>`;
+                const taskList = document.createElement('ul');
+                taskList.className = 'task-list';
+
+                tasksByDate[date].forEach(task => {
+                    const li = document.createElement('li');
+                    li.className = `task-item ${task.completed ? 'completed' : ''}`;
+                    li.innerHTML = `
+                        <input type="checkbox" ${task.completed ? 'checked' : ''} onchange="toggleTask(${task.index})">
+                        <span>${task.text}</span>
+                        <button class="delete-btn" onclick="deleteTask(${task.index})">Supprimer</button>
+                    `;
+                    taskList.appendChild(li);
+                });
+
+                dateDiv.appendChild(taskList);
+                taskContainer.appendChild(dateDiv);
+            }
+        }
+
+        // Ajouter une nouvelle tâche
+        function addTask() {
+            const taskInput = document.getElementById('taskInput');
+            const taskDate = document.getElementById('taskDate');
+            const taskText = taskInput.value.trim();
+            const taskDateValue = taskDate.value || getTodayDate();
+
+            if (taskText) {
+                tasks.push({ text: taskText, date: taskDateValue, completed: false });
+                taskInput.value = '';
+                taskDate.value = '';
+                saveTasks();
+                renderTasks();
+            }
+        }
+
+        // Marquer une tâche comme terminée
+        function toggleTask(index) {
+            tasks[index].completed = !tasks[index].completed;
+            saveTasks();
+            renderTasks();
+        }
+
+        // Supprimer une tâche
+        function deleteTask(index) {
+            tasks.splice(index, 1);
+            saveTasks();
+            renderTasks();
+        }
+
+        // Sauvegarder les tâches dans le localStorage
+        function saveTasks() {
+            localStorage.setItem('tasks', JSON.stringify(tasks));
+        }
+
+        // Permettre l'ajout de tâche avec la touche Entrée
+        document.getElementById('taskInput').addEventListener('keypress', function(e) {
+            if (e.key === 'Enter') {
+                addTask();
+            }
+        });
+
+        // Initialiser l'affichage des tâches
+        renderTasks();
+    </script>
+</body>
+</html>
